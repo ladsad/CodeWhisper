@@ -6,21 +6,63 @@ This project aims to build a **state-of-the-art tool that automatically generate
 
 Unlike existing tools like GitHub Copilot or Tabnine, this solution uniquely blends deep analytics with AI-based summarization. Key differentiators include multi-language support (Python, Java, Javascript), custom complexity metric extraction (Cyclomatic, Halstead, Maintainability Index), code health anomaly detection, and actionable suggestions for refactoring candidates.
 
-**Technical Architecture**
+## 2. Technical Architecture
 
-The system consists of:
+### System Design
 
-* **GitHub repository scraper** (using PyGithub or git) to extract and process code files, supporting multiple programming languages.
+```ascii
+                ┌───────────────────────────────┐
+                │      GitHub Repo Scraper      │
+                └─────────────┬─────────────────┘
+                              │
+                    ┌─────────▼─────────┐
+                    │  Data Pipeline    │
+                    └─────────┬─────────┘
+        ┌─────────────┬─────┬──────────┴─────────────┐
+        │             │     │                        │
+ ┌──────▼──────┐ ┌────▼────┐ │       ┌─────────────┐  │
+ │ Preprocess  │ │ AST     │ │       │ Complexity  │  │
+ │ Code/Docs   │ │ Parsing │ │       │ Metrics     │  │
+ └──────▲──────┘ └──▲──────┘ │       └────▲────────┘  │
+        │             │      │            │           │
+        │   ┌─────────┴──────┴────────────┴──────┐   │
+        │   │ Transformer Model (CodeT5, etc)    │   │
+        │   └────────────────┬───────────────────┘   │
+        │                    │                       │
+        │        ┌───────────▼────────────┐          │
+        └───────►│ Documentation & Metrics│◄─────────┘
+                 └───────────┬────────────┘
+                             │
+                   ┌─────────▼──────────┐
+                   │ Analytics Storage  │
+                   └─────────┬──────────┘
+                             │
+                    ┌────────▼──────────┐
+                    │   Dashboard (UI)  │
+                    └───────────────────┘
+```
 
-* **Data pipeline and AST parsing** modules that prepare code-function and docstring pairs, leveraging ast (Python) and javalang (Java).
+### Component Breakdown
 
-* **Transformer-based docstring generator** utilizing models like CodeT5, fine-tuned via LoRA/QLoRA for efficiency.
+-   **Ingestion & Scraping:** Clone or pull from target repositories (via GitHub API or local files)
+-   **Preprocessing:** Clean, deduplicate, and batch code
+-   **AST Parsing:** Use language-specific parsers (Python: ast, Java: JavaParser)
+-   **Transformer Inference:** Model to autogenerate and score documentation
+-   **Complexity Analyzer:** Compute code metrics (see Section 4)
+-   **Data Store:** Database (e.g., SQLite/Postgres) to persist results
+-   **Analytics Dashboard:** Streamlit/Dash/React frontend for interactive insights
 
-* **Metrics engine** calculating code complexity, maintainability index, and documentation coverage.
+### Technology Stack & Justification
 
-* **Analytics dashboard** (Streamlit/Dash) showing repository health, complexity distribution, documentation stats, and flagged refactoring suggestions.
-
-All outputs, scores, and documentation are stored in a database (e.g., SQLite), enabling both real-time analysis and historical tracking.
+| Component         | Technology                                                                    | Justification                                     |
+| ----------------- | ----------------------------------------------------------------------------- | ------------------------------------------------- |
+| Scraper           | PyGithub, Git CLI                                                             | Robust API, supports private/public repos         |
+| AST Parser        | ast/javalang                                                                  | Strong static analysis, language-specific parsing |
+| Transformer Model | HuggingFace (PyTorch/TensorFlow)                                              | Pretrained models, easy finetuning                |
+| Metrics           | Radon (Python), lizard (multi), Cognitive Complexity (pylint), custom scripts | Comprehensive metrics                             |
+| Data Store        | SQLite/MySQL/Postgres                                                         | Easy local development/scalability                |
+| Dashboard         | Streamlit/Dash/React+D3                                                       | Fast interactive prototyping, real-time capable   |
+| Backend           | FastAPI/Flask                                                                 | Async inference, REST API for dashboard/VSCode    |
 
 **Transformer Model & Implementation**
 
