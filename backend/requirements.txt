@@ -12,3 +12,7 @@ bitsandbytes
 accelerate
 datasets
 scipy
+evaluate
+rouge_score
+sacrebleu
+bert_score
