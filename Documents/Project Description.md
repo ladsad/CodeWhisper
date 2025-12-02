@@ -64,31 +64,62 @@ Unlike existing tools like GitHub Copilot or Tabnine, this solution uniquely ble
 | Dashboard         | Streamlit/Dash/React+D3                                                       | Fast interactive prototyping, real-time capable   |
 | Backend           | FastAPI/Flask                                                                 | Async inference, REST API for dashboard/VSCode    |
 
-**Transformer Model & Implementation**
+### Database Schema (Sample)
+**Table: code_files**
 
-* **Model Selection:** CodeT5 is recommended for its superior performance in code documentation generation and multi-language support. CodeBERT and CodeLlama are alternatives for specific sub-tasks.
+| Column | Type | Description |
+| :--- | :--- | :--- |
+| file_id | INTEGER PK | File identifier |
+| repo_name | TEXT | Repository name |
+| file_path | TEXT | Path within repo |
+| language | TEXT | Language (Python/Java, etc) |
+| code_text | TEXT | Raw code |
+| docstring_text | TEXT | Existing docstring (if any) |
+| generated_doc | TEXT | Model-generated docstring |
+| complexity_json | JSON | Dict for metrics (McCabe, Halstead, MI, etc) |
+| timestamp | TIMESTAMP | Extraction time |
 
-* **Training Data:** Combines public datasets (CodeSearchNet, CodeXGLUE) with personal GitHub code, paired via AST parsing.
+## 3. Transformer Component - Detailed Implementation
 
-* **Fine-tuning:** Uses efficient LoRA/QLoRA methods on limited GPUs; input formatting includes language tags and function signatures.
+### Model Comparison: Code Documentation Generation
 
-* **Evaluation:** BLEU, ROUGE, BERTScore, CodeBLEU, plus human rubric ratings.
+| Model | Architecture | Pros | Cons | Best For |
+| :--- | :--- | :--- | :--- | :--- |
+| **CodeBERT** | Encoder-only (BERT-based) | Lightweight, fast embeddings, good for search | **Not designed for generation** (seq2seq), requires ad-hoc decoders | Code search, classification, clone detection |
+| **CodeT5 / CodeT5+** | Encoder-Decoder (T5-based) | **SOTA for summarization**, native multi-lang support, efficient fine-tuning | Moderate resource usage compared to LLMs | **Doc generation**, code translation, refinement |
+| **CodeLlama** | Decoder-only (LLM) | Powerful generation, large context window, zero-shot capabilities | **Heavy compute**, slower inference, requires quantization for consumer GPUs | Complex generation, chat, reasoning |
+
+### Recommendation: CodeT5+
+
+**Why:**
+-   **Strong documentation generation results:** specifically pre-trained for code-to-text tasks.
+-   **Multi-language support:** Native support for Python, Java, JS, etc.
+-   **HuggingFace support:** Excellent integration with `transformers` library.
+-   **Lightweight:** 220M/770M parameter versions are feasible for local dev/small-scale fine-tuning.
+
+**CodeLlama (Meta)** is strong for large-scale tasks but requires significantly heavier compute resources.
+**CodeBERT** is better suited for embedding and classification tasks, not text generation.
+
+### Implementation Details
+*   **Training Data:** Combines public datasets (CodeSearchNet, CodeXGLUE) with personal GitHub code, paired via AST parsing.
+*   **Fine-tuning:** Uses efficient LoRA/QLoRA methods on limited GPUs; input formatting includes language tags and function signatures.
+*   **Evaluation:** BLEU, ROUGE, BERTScore, CodeBLEU, plus human rubric ratings.
 
 **Data Science & Analytics Module**
 
-* **Calculates**: Cyclomatic complexity (McCabe), Halstead metrics, lines of code (LOC), maintainability index, cognitive complexity.
+*   **Calculates**: Cyclomatic complexity (McCabe), Halstead metrics, lines of code (LOC), maintainability index, cognitive complexity.
 
-* **Analysis:** Uses statistical tests and ML models (RandomForest/XGBoost) to correlate documentation quality with code complexity and predict maintainability.
+*   **Analysis:** Uses statistical tests and ML models (RandomForest/XGBoost) to correlate documentation quality with code complexity and predict maintainability.
 
-* **Anomaly Detection:** Isolation Forest or threshold models flag poorly documented/high-complexity code units for action.
+*   **Anomaly Detection:** Isolation Forest or threshold models flag poorly documented/high-complexity code units for action.
 
 **Dashboard Design**
 
-* **Visualizations:** Repository health scores, complexity heatmaps, documentation coverage bars, commit trend analyses.
+*   **Visualizations:** Repository health scores, complexity heatmaps, documentation coverage bars, commit trend analyses.
 
-* **Tech Stack:** Streamlit recommended for fast prototypes; Dash or React+D3 for advanced setups.
+*   **Tech Stack:** Streamlit recommended for fast prototypes; Dash or React+D3 for advanced setups.
 
-* **Modes:** Batch analyses by default, with options for real-time refresh.
+*   **Modes:** Batch analyses by default, with options for real-time refresh.
 
 **Extensions & Future Work**
 

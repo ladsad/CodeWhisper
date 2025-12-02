@@ -14,3 +14,9 @@ dist/
 .DS_Store
 coverage/
 .vscode/
+
+# Agent
+.agent
+
+# Backend
+extracted_pairs.json
