@@ -1,0 +1,79 @@
+[
+  {
+    "file_path": ".\\main.py",
+    "actual_mi": 100.0,
+    "predicted_mi": 99.99967956542969,
+    "difference": 0.0003204345703125,
+    "status": "Normal"
+  },
+  {
+    "file_path": ".\\api\\analysis.py",
+    "actual_mi": 66.46780546412242,
+    "predicted_mi": 66.46833801269531,
+    "difference": -0.0005325485728917556,
+    "status": "Normal"
+  },
+  {
+    "file_path": ".\\api\\__init__.py",
+    "actual_mi": 100.0,
+    "predicted_mi": 99.99967956542969,
+    "difference": 0.0003204345703125,
+    "status": "Normal"
+  },
+  {
+    "file_path": ".\\core\\analyzer.py",
+    "actual_mi": 58.355421855001666,
+    "predicted_mi": 58.356590270996094,
+    "difference": -0.0011684159944280736,
+    "status": "Normal"
+  },
+  {
+    "file_path": ".\\core\\extractor.py",
+    "actual_mi": 65.66935190119919,
+    "predicted_mi": 65.66939544677734,
+    "difference": -4.3545578151338304e-05,
+    "status": "Normal"
+  },
+  {
+    "file_path": ".\\core\\metrics.py",
+    "actual_mi": 68.58606023858495,
+    "predicted_mi": 66.47267150878906,
+    "difference": 2.1133887297958864,
+    "status": "Normal"
+  },
+  {
+    "file_path": ".\\core\\scanner.py",
+    "actual_mi": 80.98627458718977,
+    "predicted_mi": 80.98602294921875,
+    "difference": 0.00025163797101868113,
+    "status": "Normal"
+  },
+  {
+    "file_path": ".\\core\\__init__.py",
+    "actual_mi": 100.0,
+    "predicted_mi": 99.99967956542969,
+    "difference": 0.0003204345703125,
+    "status": "Normal"
+  },
+  {
+    "file_path": ".\\ml\\evaluate.py",
+    "actual_mi": 66.99925024358846,
+    "predicted_mi": 66.99877166748047,
+    "difference": 0.00047857610799439954,
+    "status": "Normal"
+  },
+  {
+    "file_path": ".\\ml\\train.py",
+    "actual_mi": 75.79975373674274,
+    "predicted_mi": 66.04888153076172,
+    "difference": 9.750872205981025,
+    "status": "Normal"
+  },
+  {
+    "file_path": ".\\ml\\__init__.py",
+    "actual_mi": 100.0,
+    "predicted_mi": 99.99967956542969,
+    "difference": 0.0003204345703125,
+    "status": "Normal"
+  }
+]

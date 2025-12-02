@@ -19,3 +19,4 @@ bert_score
 radon
 lizard
 scikit-learn
+xgboost
