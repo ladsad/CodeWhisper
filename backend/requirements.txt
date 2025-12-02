@@ -18,3 +18,4 @@ sacrebleu
 bert_score
 radon
 lizard
+scikit-learn
