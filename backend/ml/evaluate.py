@@ -2,9 +2,11 @@ import argparse
 import json
 import torch
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+from peft import PeftModel, PeftConfig
 from datasets import load_metric
 import evaluate
 from tqdm import tqdm
+import os
 
 def evaluate_model(
     test_file: str,
@@ -13,8 +15,21 @@ def evaluate_model(
     device: str = "cuda" if torch.cuda.is_available() else "cpu"
 ):
     print(f"Loading model from {model_path} on {device}...")
-    tokenizer = AutoTokenizer.from_pretrained(model_path)
-    model = AutoModelForSeq2SeqLM.from_pretrained(model_path).to(device)
+    
+    # Check if it's a PEFT model
+    is_peft = os.path.exists(os.path.join(model_path, "adapter_config.json"))
+    
+    if is_peft:
+        print("Detected PEFT adapter. Loading base model + adapter...")
+        config = PeftConfig.from_pretrained(model_path)
+        base_model_path = config.base_model_name_or_path
+        
+        tokenizer = AutoTokenizer.from_pretrained(base_model_path)
+        base_model = AutoModelForSeq2SeqLM.from_pretrained(base_model_path)
+        model = PeftModel.from_pretrained(base_model, model_path).to(device)
+    else:
+        tokenizer = AutoTokenizer.from_pretrained(model_path)
+        model = AutoModelForSeq2SeqLM.from_pretrained(model_path).to(device)
     
     # Load metrics
     bleu = evaluate.load("bleu")
