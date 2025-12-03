@@ -3,7 +3,6 @@ import json
 import torch
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 from peft import PeftModel, PeftConfig
-from datasets import load_metric
 import evaluate
 from tqdm import tqdm
 import os
