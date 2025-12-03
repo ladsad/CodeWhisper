@@ -38,25 +38,27 @@ class MetricsAnalyzer:
         # Function-level metrics using Radon
         functions = []
         try:
+            # AST parse for docstrings
+            import ast
+            tree = ast.parse(code)
+            docstrings = {}
+            for node in ast.walk(tree):
+                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    docstrings[node.name] = bool(ast.get_docstring(node))
+
             blocks = radon_cc.cc_visit(code)
             for block in blocks:
                 if isinstance(block, Function):
-                    # Calculate Halstead for function body
-                    # We need to extract the source code for the function to do precise Halstead
-                    # Radon blocks have lineno and endline (if available, or we guess)
-                    # For simplicity here, we'll rely on what we have. 
-                    # Actually radon block object doesn't have source. 
-                    # We will use the complexity provided.
-                    
                     func_metrics = {
                         "name": block.name,
                         "lineno": block.lineno,
                         "cyclomatic_complexity": block.complexity,
-                        "type": "method" if block.is_method else "function"
+                        "type": "method" if block.is_method else "function",
+                        "has_docstring": docstrings.get(block.name, False)
                     }
                     functions.append(func_metrics)
         except Exception as e:
-            print(f"Error in Radon analysis for {file_path}: {e}")
+            print(f"Error in Radon/AST analysis for {file_path}: {e}")
 
         # Cross-check/Augment with Lizard (good for Cognitive Complexity proxy and consistency)
         try:
@@ -99,6 +101,16 @@ class MetricsAnalyzer:
         nloc = 0
         
         try:
+            # Javalang for docstrings
+            import javalang
+            try:
+                tree = javalang.parse.parse(open(file_path, encoding='utf-8').read())
+                docstrings = {}
+                for _, node in tree.filter(javalang.tree.MethodDeclaration):
+                    docstrings[node.name] = bool(node.documentation)
+            except:
+                docstrings = {}
+
             liz_analysis = lizard.analyze_file(file_path)
             loc = len(open(file_path, encoding='utf-8').readlines())
             nloc = liz_analysis.nloc
@@ -110,10 +122,11 @@ class MetricsAnalyzer:
                     "cyclomatic_complexity": func.cyclomatic_complexity,
                     "nloc": func.nloc,
                     "token_count": func.token_count,
-                    "params": len(func.parameters)
+                    "params": len(func.parameters),
+                    "has_docstring": docstrings.get(func.name, False)
                 })
         except Exception as e:
-            print(f"Error in Lizard analysis for {file_path}: {e}")
+            print(f"Error in Lizard/Javalang analysis for {file_path}: {e}")
 
         return {
             "file_path": file_path,
