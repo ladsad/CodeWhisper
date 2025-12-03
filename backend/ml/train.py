@@ -87,7 +87,7 @@ def train(
         num_train_epochs=epochs,
         logging_steps=10,
         save_strategy="epoch",
-        evaluation_strategy="no", # Set to 'steps' or 'epoch' if validation set provided
+        eval_strategy="no", # Set to 'steps' or 'epoch' if validation set provided
         fp16=True, # Use FP16 if GPU supports it
         optim="paged_adamw_8bit", # Use 8-bit optimizer to save memory
         ddp_find_unused_parameters=False if torch.cuda.device_count() > 1 else None,
