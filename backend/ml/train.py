@@ -116,6 +116,8 @@ if __name__ == "__main__":
     parser.add_argument("--output_dir", type=str, default="./results", help="Output directory")
     parser.add_argument("--model_name", type=str, default="Salesforce/codet5-small", help="Base model name")
     parser.add_argument("--batch_size", type=int, default=4, help="Batch size per device")
+    parser.add_argument("--epochs", type=int, default=3, help="Number of training epochs")
+    parser.add_argument("--learning_rate", type=float, default=2e-4, help="Learning rate")
     
     args = parser.parse_args()
     
@@ -123,5 +125,7 @@ if __name__ == "__main__":
         train_file=args.train_file,
         output_dir=args.output_dir,
         model_name=args.model_name,
-        batch_size=args.batch_size
+        batch_size=args.batch_size,
+        epochs=args.epochs,
+        learning_rate=args.learning_rate
     )

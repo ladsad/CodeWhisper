@@ -17,6 +17,3 @@ coverage/
 
 # Agent
 .agent
-
-# Backend
-extracted_pairs.json
