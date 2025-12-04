@@ -12,14 +12,22 @@ def prepare_codesearchnet(output_dir, languages=['python', 'java'], split='train
     for lang in languages:
         print(f"Loading {lang}...")
         try:
-            # Using 'husain/codesearchnet' as the official one relies on deprecated scripts
-            ds = load_dataset("husain/codesearchnet", lang, split=split, streaming=True)
+            # Using 'sentence-transformers/codesearchnet' which is a Parquet mirror
+            # Note: This dataset might not be split by language in the config, checking...
+            # If it's monolithic, we might need to filter.
+            # Let's try loading the specific language subset if possible, or the whole thing and filter.
+            # 'sentence-transformers/codesearchnet' usually has 'lang' column.
+            ds = load_dataset("sentence-transformers/codesearchnet", split=split, streaming=True)
         except Exception as e:
             print(f"Error loading {lang}: {e}")
             continue
 
         count = 0
         for item in tqdm(ds):
+            # Check language filter
+            if item.get('lang') != lang and item.get('language') != lang:
+                continue
+
             # Check for various common field names
             code = item.get('func_code_string') or item.get('code') or ''
             doc = item.get('func_documentation_string') or item.get('docstring') or ''
