@@ -11,21 +11,18 @@ def prepare_codesearchnet(output_dir, languages=['python', 'java'], split='train
     
     for lang in languages:
         print(f"Loading {lang}...")
-        # Load streaming to avoid massive RAM usage
         try:
-            ds = load_dataset("code_search_net", split=split, streaming=True, trust_remote_code=True)
-            # The dataset might be subsetted by language in the config, checking structure
-            # Actually code_search_net has subsets like 'python', 'java'
-            ds = load_dataset("code_search_net", lang, split=split, streaming=True, trust_remote_code=True)
+            # Using 'husain/codesearchnet' as the official one relies on deprecated scripts
+            ds = load_dataset("husain/codesearchnet", lang, split=split, streaming=True)
         except Exception as e:
             print(f"Error loading {lang}: {e}")
             continue
 
         count = 0
         for item in tqdm(ds):
-            # CodeSearchNet structure: 'func_code_string', 'func_documentation_string'
-            code = item.get('func_code_string', '')
-            doc = item.get('func_documentation_string', '')
+            # Check for various common field names
+            code = item.get('func_code_string') or item.get('code') or ''
+            doc = item.get('func_documentation_string') or item.get('docstring') or ''
             
             if code and doc:
                 entry = {
