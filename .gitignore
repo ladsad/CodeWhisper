@@ -21,4 +21,3 @@ coverage/
 
 # Backend
 backend/scraped_data/
-backend/processed_data/

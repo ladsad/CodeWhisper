@@ -18,7 +18,7 @@ def train(
     model_name: str = "Salesforce/codet5-small",
     batch_size: int = 4,
     epochs: int = 3,
-    learning_rate: float = 2e-4
+    learning_rate: float = 2e-5
 ):
     print(f"Loading model: {model_name}")
     
@@ -127,7 +127,7 @@ if __name__ == "__main__":
     parser.add_argument("--model_name", type=str, default="Salesforce/codet5-small", help="Base model name")
     parser.add_argument("--batch_size", type=int, default=4, help="Batch size per device")
     parser.add_argument("--epochs", type=int, default=3, help="Number of training epochs")
-    parser.add_argument("--learning_rate", type=float, default=2e-4, help="Learning rate")
+    parser.add_argument("--learning_rate", type=float, default=2e-5, help="Learning rate")
     
     args = parser.parse_args()
     

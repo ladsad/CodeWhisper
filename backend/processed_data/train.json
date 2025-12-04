@@ -1,0 +1,92 @@
+[
+  {
+    "language": "python",
+    "file_path": "./scraped_data\\ArtResGAN_utils_helpers.py.txt",
+    "name": "save_checkpoint",
+    "code": "def save_checkpoint(epoch, model, optimizer, path):\n    \"\"\"Save training checkpoint\"\"\"\n    torch.save({\n        'epoch': epoch,\n        'generator_state_dict': model.generator.state_dict(),\n        'discriminator_state_dict': model.discriminator.state_dict(),\n        'optimizer_G_state_dict': optimizer[0].state_dict(),\n        'optimizer_D_state_dict': optimizer[1].state_dict(),\n    }, path)",
+    "docstring": "Save training checkpoint",
+    "metadata": "Repo: ladsad/ArtResGAN\nPath: utils/helpers.py\nLanguage: python"
+  },
+  {
+    "language": "python",
+    "file_path": "./scraped_data\\ArtResGAN_utils_helpers.py.txt",
+    "name": "load_checkpoint",
+    "code": "def load_checkpoint(path, device, model, optimizer):\n    \"\"\"Load training checkpoint with proper device handling\"\"\"\n    if not os.path.exists(path):\n        print(f\"No checkpoint found at {path}\")\n        return 0, float('inf')  # Return default epoch and loss\n    \n    try:\n        checkpoint = torch.load(path, map_location=device)\n        \n        # Load model state with strict=False for backward compatibility\n        model.load_state_dict(checkpoint['model_state_dict'], strict=False)\n        \n        # Load optimizer state and move tensors to device\n        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])\n        \n        # Manually move optimizer tensors to device\n        for state in optimizer.state.values():\n            for k, v in state.items():\n                if isinstance(v, torch.Tensor):\n                    state[k] = v.to(device)\n        \n        # Get saved training progress\n        epoch = checkpoint.get('epoch', 0)\n        loss = checkpoint.get('loss', float('inf'))\n        \n        print(f\"Loaded checkpoint from epoch {epoch} with loss {loss:.4f}\")\n        return epoch, loss\n        \n    except Exception as e:\n        print(f\"Error loading checkpoint: {str(e)}\")\n        print(\"Continuing with initial model weights\")\n        return 0, float('inf')",
+    "docstring": "Load training checkpoint with proper device handling",
+    "metadata": "Repo: ladsad/ArtResGAN\nPath: utils/helpers.py\nLanguage: python"
+  },
+  {
+    "language": "python",
+    "file_path": "./scraped_data\\ArtResGAN_utils_techniques.py.txt",
+    "name": "sobel_edge_detection",
+    "code": "    def sobel_edge_detection(image_tensor):\n        \"\"\"Apply Sobel edge detection to image tensor.\"\"\"\n        # Convert tensor to numpy for OpenCV processing\n        if isinstance(image_tensor, torch.Tensor):\n            if image_tensor.dim() == 4:  # batch of images\n                return torch.stack([MachineVisionTechniques.sobel_edge_detection(img) for img in image_tensor])\n            \n            image_np = image_tensor.detach().cpu().numpy().transpose(1, 2, 0)\n            # Scale from [-1, 1] to [0, 255]\n            image_np = ((image_np + 1) * 127.5).astype(np.uint8)\n        else:\n            image_np = image_tensor\n            \n        # Convert to grayscale if it's RGB\n        if image_np.shape[-1] == 3:\n            gray = cv2.cvtColor(image_np, cv2.COLOR_RGB2GRAY)\n        else:\n            gray = image_np\n            \n        # Apply Sobel operator\n        sobelx = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=3)\n        sobely = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=3)\n        \n        # Compute magnitude\n        magnitude = np.sqrt(sobelx**2 + sobely**2)\n        \n        # Normalize to [0, 1]\n        magnitude = cv2.normalize(magnitude, None, 0, 1, cv2.NORM_MINMAX)\n        \n        # Convert back to tensor\n        magnitude_tensor = torch.from_numpy(magnitude).float().unsqueeze(0)\n        \n        if isinstance(image_tensor, torch.Tensor):\n            magnitude_tensor = magnitude_tensor.to(image_tensor.device)\n            \n        return magnitude_tensor",
+    "docstring": "Apply Sobel edge detection to image tensor.",
+    "metadata": "Repo: ladsad/ArtResGAN\nPath: utils/techniques.py\nLanguage: python"
+  },
+  {
+    "language": "python",
+    "file_path": "./scraped_data\\ArtResGAN_utils_techniques.py.txt",
+    "name": "canny_edge_detection",
+    "code": "    def canny_edge_detection(image_tensor, low_threshold=100, high_threshold=200):\n        \"\"\"Apply Canny edge detection to image tensor.\"\"\"\n        # Convert tensor to numpy for OpenCV processing\n        if isinstance(image_tensor, torch.Tensor):\n            if image_tensor.dim() == 4:  # batch of images\n                return torch.stack([MachineVisionTechniques.canny_edge_detection(img, low_threshold, high_threshold) \n                                   for img in image_tensor])\n            \n            image_np = image_tensor.detach().cpu().numpy().transpose(1, 2, 0)\n            # Scale from [-1, 1] to [0, 255]\n            image_np = ((image_np + 1) * 127.5).astype(np.uint8)\n        else:\n            image_np = image_tensor\n            \n        # Convert to grayscale if it's RGB\n        if image_np.shape[-1] == 3:\n            gray = cv2.cvtColor(image_np, cv2.COLOR_RGB2GRAY)\n        else:\n            gray = image_np\n            \n        # Apply Canny edge detection\n        edges = cv2.Canny(gray, low_threshold, high_threshold)\n        \n        # Convert back to tensor\n        edges_tensor = torch.from_numpy(edges).float() / 255.0\n        edges_tensor = edges_tensor.unsqueeze(0)\n        \n        if isinstance(image_tensor, torch.Tensor):\n            edges_tensor = edges_tensor.to(image_tensor.device)\n            \n        return edges_tensor",
+    "docstring": "Apply Canny edge detection to image tensor.",
+    "metadata": "Repo: ladsad/ArtResGAN\nPath: utils/techniques.py\nLanguage: python"
+  },
+  {
+    "language": "python",
+    "file_path": "./scraped_data\\ArtResGAN_utils_techniques.py.txt",
+    "name": "morphological_operations",
+    "code": "    def morphological_operations(image_tensor, operation='dilate', kernel_size=3):\n        \"\"\"Apply morphological operations (dilate/erode) to image tensor.\"\"\"\n        # Convert tensor to numpy for OpenCV processing\n        if isinstance(image_tensor, torch.Tensor):\n            if image_tensor.dim() == 4:  # batch of images\n                return torch.stack([MachineVisionTechniques.morphological_operations(img, operation, kernel_size) \n                                   for img in image_tensor])\n            \n            image_np = image_tensor.detach().cpu().numpy().transpose(1, 2, 0)\n            # Scale from [-1, 1] to [0, 255]\n            image_np = ((image_np + 1) * 127.5).astype(np.uint8)\n        else:\n            image_np = image_tensor\n            \n        # Create kernel\n        kernel = np.ones((kernel_size, kernel_size), np.uint8)\n        \n        # Apply morphological operation\n        if operation == 'dilate':\n            result = cv2.dilate(image_np, kernel, iterations=1)\n        elif operation == 'erode':\n            result = cv2.erode(image_np, kernel, iterations=1)\n        elif operation == 'open':\n            result = cv2.morphologyEx(image_np, cv2.MORPH_OPEN, kernel)\n        elif operation == 'close':\n            result = cv2.morphologyEx(image_np, cv2.MORPH_CLOSE, kernel)\n        else:\n            raise ValueError(f\"Unsupported operation: {operation}\")\n            \n        # Convert back to tensor\n        if result.ndim == 2:\n            result = result[..., np.newaxis]\n            \n        result_tensor = torch.from_numpy(result).float().permute(2, 0, 1)\n        # Scale back to [-1, 1]\n        result_tensor = result_tensor / 127.5 - 1\n        \n        if isinstance(image_tensor, torch.Tensor):\n            result_tensor = result_tensor.to(image_tensor.device)\n            \n        return result_tensor",
+    "docstring": "Apply morphological operations (dilate/erode) to image tensor.",
+    "metadata": "Repo: ladsad/ArtResGAN\nPath: utils/techniques.py\nLanguage: python"
+  },
+  {
+    "language": "python",
+    "file_path": "./scraped_data\\ArtResGAN_utils_techniques.py.txt",
+    "name": "local_binary_pattern",
+    "code": "    def local_binary_pattern(image_tensor, P=8, R=1):\n        \"\"\"Apply Local Binary Pattern for texture analysis.\"\"\"\n        from skimage.feature import local_binary_pattern\n        \n        # Convert tensor to numpy for scikit-image processing\n        if isinstance(image_tensor, torch.Tensor):\n            if image_tensor.dim() == 4:  # batch of images\n                return torch.stack([MachineVisionTechniques.local_binary_pattern(img, P, R) \n                                   for img in image_tensor])\n            \n            image_np = image_tensor.detach().cpu().numpy().transpose(1, 2, 0)\n            # Scale from [-1, 1] to [0, 1]\n            image_np = (image_np + 1) / 2\n        else:\n            image_np = image_tensor\n            \n        # Convert to grayscale if it's RGB\n        if image_np.shape[-1] == 3:\n            gray = cv2.cvtColor((image_np * 255).astype(np.uint8), cv2.COLOR_RGB2GRAY)\n            gray = gray / 255.0\n        else:\n            gray = image_np.squeeze()\n            \n        # Apply LBP\n        lbp = local_binary_pattern(gray, P, R, method='uniform')\n        \n        # Normalize to [0, 1]\n        lbp = lbp / lbp.max()\n        \n        # Convert back to tensor\n        lbp_tensor = torch.from_numpy(lbp).float().unsqueeze(0)\n        \n        if isinstance(image_tensor, torch.Tensor):\n            lbp_tensor = lbp_tensor.to(image_tensor.device)\n            \n        return lbp_tensor",
+    "docstring": "Apply Local Binary Pattern for texture analysis.",
+    "metadata": "Repo: ladsad/ArtResGAN\nPath: utils/techniques.py\nLanguage: python"
+  },
+  {
+    "language": "python",
+    "file_path": "./scraped_data\\ArtResGAN_utils_techniques.py.txt",
+    "name": "harris_corner_detection",
+    "code": "    def harris_corner_detection(image_tensor, block_size=2, ksize=3, k=0.04):\n        \"\"\"Apply Harris corner detection.\"\"\"\n        # Convert tensor to numpy for OpenCV processing\n        if isinstance(image_tensor, torch.Tensor):\n            if image_tensor.dim() == 4:  # batch of images\n                return torch.stack([MachineVisionTechniques.harris_corner_detection(img, block_size, ksize, k) \n                                   for img in image_tensor])\n            \n            image_np = image_tensor.detach().cpu().numpy().transpose(1, 2, 0)\n            # Scale from [-1, 1] to [0, 255]\n            image_np = ((image_np + 1) * 127.5).astype(np.uint8)\n        else:\n            image_np = image_tensor\n            \n        # Convert to grayscale if it's RGB\n        if image_np.shape[-1] == 3:\n            gray = cv2.cvtColor(image_np, cv2.COLOR_RGB2GRAY)\n        else:\n            gray = image_np\n            \n        # Apply Harris corner detection\n        dst = cv2.cornerHarris(np.float32(gray), block_size, ksize, k)\n        \n        # Normalize to [0, 1]\n        dst = cv2.normalize(dst, None, 0, 1, cv2.NORM_MINMAX)\n        \n        # Convert back to tensor\n        dst_tensor = torch.from_numpy(dst).float().unsqueeze(0)\n        \n        if isinstance(image_tensor, torch.Tensor):\n            dst_tensor = dst_tensor.to(image_tensor.device)\n            \n        return dst_tensor",
+    "docstring": "Apply Harris corner detection.",
+    "metadata": "Repo: ladsad/ArtResGAN\nPath: utils/techniques.py\nLanguage: python"
+  },
+  {
+    "language": "python",
+    "file_path": "./scraped_data\\ArtResGAN_utils_techniques.py.txt",
+    "name": "haar_wavelet_transform",
+    "code": "    def haar_wavelet_transform(image_tensor):\n        \"\"\"Apply Haar wavelet transform for multi-scale analysis.\"\"\"\n        # Convert tensor to numpy\n        if isinstance(image_tensor, torch.Tensor):\n            if image_tensor.dim() == 4:  # batch of images\n                return torch.stack([MachineVisionTechniques.haar_wavelet_transform(img) \n                                   for img in image_tensor])\n            \n            image_np = image_tensor.detach().cpu().numpy()\n            if image_np.shape[0] == 3:  # RGB image\n                image_np = image_np.transpose(1, 2, 0)\n        else:\n            image_np = image_tensor\n            \n        # Convert to grayscale if it's RGB\n        if image_np.shape[-1] == 3:\n            gray = cv2.cvtColor((image_np * 255).astype(np.uint8), cv2.COLOR_RGB2GRAY)\n            gray = gray / 255.0\n        else:\n            gray = image_np.squeeze()\n            \n        # Apply Haar wavelet transform\n        coeffs = pywt.dwt2(gray, 'haar')\n        LL, (LH, HL, HH) = coeffs\n        \n        # Normalize each component\n        LL = (LL - LL.min()) / (LL.max() - LL.min() + 1e-8)\n        LH = (LH - LH.min()) / (LH.max() - LH.min() + 1e-8)\n        HL = (HL - HL.min()) / (HL.max() - HL.min() + 1e-8)\n        HH = (HH - HH.min()) / (HH.max() - HH.min() + 1e-8)\n        \n        # Stack components\n        wavelet_features = np.stack([LL, LH, HL, HH], axis=0)\n        \n        # Convert back to tensor\n        wavelet_tensor = torch.from_numpy(wavelet_features).float()\n        \n        if isinstance(image_tensor, torch.Tensor):\n            wavelet_tensor = wavelet_tensor.to(image_tensor.device)\n            \n        return wavelet_tensor",
+    "docstring": "Apply Haar wavelet transform for multi-scale analysis.",
+    "metadata": "Repo: ladsad/ArtResGAN\nPath: utils/techniques.py\nLanguage: python"
+  },
+  {
+    "language": "python",
+    "file_path": "./scraped_data\\ArtResGAN_utils_techniques.py.txt",
+    "name": "enhance_image_with_mv_techniques",
+    "code": "    def enhance_image_with_mv_techniques(image_tensor):\n        \"\"\"Apply multiple machine vision techniques and combine the results.\"\"\"\n        # Get edge maps\n        sobel_edges = MachineVisionTechniques.sobel_edge_detection(image_tensor)\n        canny_edges = MachineVisionTechniques.canny_edge_detection(image_tensor)\n        \n        # Get texture features\n        lbp_features = MachineVisionTechniques.local_binary_pattern(image_tensor)\n        harris_corners = MachineVisionTechniques.harris_corner_detection(image_tensor)\n        \n        # Get wavelet features (all 4 components)\n        wavelet_features = MachineVisionTechniques.haar_wavelet_transform(image_tensor)\n        \n        # Combine features\n        edge_map = (sobel_edges + canny_edges) / 2\n        texture_map = (lbp_features + harris_corners) / 2\n        \n        # Create feature tensor\n        if isinstance(image_tensor, torch.Tensor):\n            if image_tensor.dim() == 4:  # batch of images\n                b, c, h, w = image_tensor.shape\n                # Upsample all 4 wavelet components\n                wavelet_upsampled = F.interpolate(wavelet_features[:, :4], size=(h, w), mode='bilinear', align_corners=False)\n                enhanced_features = torch.cat([\n                    image_tensor,          # 3 channels\n                    edge_map,              # 1 channel\n                    texture_map,           # 1 channel\n                    wavelet_upsampled      # 4 channels\n                ], dim=1)\n            else:\n                c, h, w = image_tensor.shape\n                wavelet_upsampled = F.interpolate(wavelet_features[:4].unsqueeze(0), size=(h, w), mode='bilinear').squeeze(0)\n                enhanced_features = torch.cat([\n                    image_tensor,\n                    edge_map,\n                    texture_map,\n                    wavelet_upsampled\n                ], dim=0)\n        \n        return enhanced_features",
+    "docstring": "Apply multiple machine vision techniques and combine the results.",
+    "metadata": "Repo: ladsad/ArtResGAN\nPath: utils/techniques.py\nLanguage: python"
+  },
+  {
+    "language": "python",
+    "file_path": "./scraped_data\\ArtResGAN_utils_helpers.py.txt",
+    "name": "save_checkpoint",
+    "code": "def save_checkpoint(arg_0, arg_1, arg_2, arg_3):\n    \"\"\"Save training checkpoint\"\"\"\n    torch.save({'epoch': arg_0, 'generator_state_dict': arg_1.generator.state_dict(), 'discriminator_state_dict': arg_1.discriminator.state_dict(), 'optimizer_G_state_dict': arg_2[0].state_dict(), 'optimizer_D_state_dict': arg_2[1].state_dict()}, arg_3)",
+    "docstring": "Save training checkpoint",
+    "metadata": "Repo: ladsad/ArtResGAN\nPath: utils/helpers.py\nLanguage: python",
+    "augmented": true
+  },
+  {
+    "language": "python",
+    "file_path": "./scraped_data\\ArtResGAN_utils_helpers.py.txt",
+    "name": "load_checkpoint",
+    "code": "def load_checkpoint(arg_0, arg_1, arg_2, arg_3):\n    \"\"\"Load training checkpoint with proper device handling\"\"\"\n    if not os.path.exists(arg_0):\n        print(f'No checkpoint found at {arg_0}')\n        return (0, float('inf'))\n    try:\n        var_4 = torch.load(arg_0, map_location=arg_1)\n        arg_2.load_state_dict(var_4['model_state_dict'], strict=False)\n        arg_3.load_state_dict(var_4['optimizer_state_dict'])\n        for var_5 in arg_3.state.values():\n            for var_6, var_7 in var_5.items():\n                if isinstance(var_7, torch.Tensor):\n                    var_5[var_6] = var_7.to(arg_1)\n        var_8 = var_4.get('epoch', 0)\n        var_9 = var_4.get('loss', float('inf'))\n        print(f'Loaded checkpoint from epoch {var_8} with loss {var_9:.4f}')\n        return (var_8, var_9)\n    except Exception as e:\n        print(f'Error loading checkpoint: {str(e)}')\n        print('Continuing with initial model weights')\n        return (0, float('inf'))",
+    "docstring": "Load training checkpoint with proper device handling",
+    "metadata": "Repo: ladsad/ArtResGAN\nPath: utils/helpers.py\nLanguage: python",
+    "augmented": true
+  }
+]
