@@ -8,19 +8,19 @@ import lizard
 from typing import List, Dict, Any
 
 class MetricsAnalyzer:
-    def analyze_file(self, file_path: str) -> Dict[str, Any]:
-        _, ext = os.path.splitext(file_path)
-        if ext == '.py':
-            return self._analyze_python(file_path)
-        elif ext == '.java':
-            return self._analyze_java(file_path)
+    def analyze_code(self, code: str, language: str = 'python') -> Dict[str, Any]:
+        """Analyze code string directly without file I/O"""
+        if language.lower() in ['python', 'py']:
+            return self._analyze_python_code(code)
+        elif language.lower() in ['java']:
+            # Java analysis in this class currently relies on file path for Lizard
+            # We'll need a workaround or just skip full metrics for string-only Java for now
+            # or write to temp file if needed. For now, let's support Python fully.
+            return {}
         else:
             return {}
 
-    def _analyze_python(self, file_path: str) -> Dict[str, Any]:
-        with open(file_path, 'r', encoding='utf-8') as f:
-            code = f.read()
-
+    def _analyze_python_code(self, code: str) -> Dict[str, Any]:
         # File-level metrics
         try:
             mi = radon_metrics.mi_visit(code, multi=False)
@@ -58,41 +58,42 @@ class MetricsAnalyzer:
                     }
                     functions.append(func_metrics)
         except Exception as e:
-            print(f"Error in Radon/AST analysis for {file_path}: {e}")
-
-        # Cross-check/Augment with Lizard (good for Cognitive Complexity proxy and consistency)
-        try:
-            liz_analysis = lizard.analyze_file(file_path)
-            # Lizard might find functions Radon missed or vice versa, but usually they align.
-            # We'll add Lizard's NLOC and CCN if we can match them.
-            for func in liz_analysis.function_list:
-                # Try to match with existing function record
-                match = next((f for f in functions if f['name'] == func.name and abs(f['lineno'] - func.start_line) < 5), None)
-                if match:
-                    match['nloc'] = func.nloc
-                    match['token_count'] = func.token_count
-                    match['cyclomatic_complexity_lizard'] = func.cyclomatic_complexity
-                else:
-                    # Add if not found (maybe Radon missed it)
-                    functions.append({
-                        "name": func.name,
-                        "lineno": func.start_line,
-                        "cyclomatic_complexity": func.cyclomatic_complexity,
-                        "nloc": func.nloc,
-                        "token_count": func.token_count,
-                        "type": "function"
-                    })
-        except Exception as e:
-            print(f"Error in Lizard analysis for {file_path}: {e}")
+            print(f"Error in Radon/AST analysis: {e}")
 
         return {
-            "file_path": file_path,
             "language": "python",
             "loc": loc,
             "sloc": sloc,
             "maintainability_index": mi,
             "functions": functions
         }
+
+    def analyze_file(self, file_path: str) -> Dict[str, Any]:
+        _, ext = os.path.splitext(file_path)
+        if ext == '.py':
+            with open(file_path, 'r', encoding='utf-8') as f:
+                code = f.read()
+            result = self._analyze_python_code(code)
+            result['file_path'] = file_path
+            
+            # Augment with Lizard (requires file path usually, but we can try string if supported or skip)
+            # Lizard analyze_file needs path. 
+            try:
+                liz_analysis = lizard.analyze_file(file_path)
+                for func in liz_analysis.function_list:
+                    match = next((f for f in result['functions'] if f['name'] == func.name and abs(f['lineno'] - func.start_line) < 5), None)
+                    if match:
+                        match['nloc'] = func.nloc
+                        match['token_count'] = func.token_count
+                        match['cyclomatic_complexity_lizard'] = func.cyclomatic_complexity
+            except Exception:
+                pass
+                
+            return result
+        elif ext == '.java':
+            return self._analyze_java(file_path)
+        else:
+            return {}
 
     def _analyze_java(self, file_path: str) -> Dict[str, Any]:
         # Java analysis relies primarily on Lizard

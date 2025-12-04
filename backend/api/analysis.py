@@ -45,3 +45,31 @@ def analyze_project(request: AnalysisRequest):
     avg_complexity = total_complexity / file_count if file_count > 0 else 0
     
     return AnalysisResponse(files=metrics, average_complexity=avg_complexity)
+class GenerateRequest(BaseModel):
+    code: str
+    language: str
+
+@router.post("/generate")
+async def generate_doc(request: GenerateRequest):
+    """
+    Generate docstring for the provided code.
+    Currently a placeholder for the actual LLM inference.
+    """
+    # Calculate complexity
+    from core.analyzer import MetricsAnalyzer
+    analyzer = MetricsAnalyzer()
+    metrics = analyzer.analyze_code(request.code, request.language)
+    
+    complexity_info = ""
+    if metrics:
+        avg_cc = 0
+        max_cc = 0
+        funcs = metrics.get('functions', [])
+        if funcs:
+            avg_cc = sum(f['cyclomatic_complexity'] for f in funcs) / len(funcs)
+            max_cc = max(f['cyclomatic_complexity'] for f in funcs)
+        
+        complexity_info = f"\nComplexity Report:\n- Maintainability Index: {metrics.get('maintainability_index', 0):.2f}\n- Avg Cyclomatic Complexity: {avg_cc:.2f}\n- Max Cyclomatic Complexity: {max_cc}"
+
+    docstring = f'"""\nAuto-generated documentation for {request.language} code.\n{complexity_info}\n"""'
+    return {"docstring": docstring}
