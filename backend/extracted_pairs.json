@@ -1,9 +1,0 @@
-[
-  {
-    "language": "python",
-    "file_path": ".\\core\\scanner.py",
-    "name": "scan_directory",
-    "docstring": "Recursively scans the directory and yields paths to supported files.",
-    "lineno": 6
-  }
-]

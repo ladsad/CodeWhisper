@@ -19,5 +19,22 @@ coverage/
 # Agent
 .agent
 
-# Backend
+# Backend - Scraped/Generated Data
 backend/scraped_data/
+backend/processed_data/
+backend/results/
+
+# Backend - Generated JSON Files
+backend/evaluation_results.json
+backend/extracted_pairs.json
+backend/maintainability_predictions.json
+backend/metrics_results.json
+backend/training_data.json
+backend/anomalies.json
+
+# Utility Scripts (not core)
+backend/check_gpu.py
+
+# VS Code Extension Build Output
+vscode-extension/node_modules/
+vscode-extension/out/
