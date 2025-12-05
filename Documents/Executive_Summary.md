@@ -1,10 +1,25 @@
 # CodeWhisper: Executive Summary
 
 ## Project Overview
-CodeWhisper is an intelligent development tool designed to bridge the gap between code and documentation. It leverages state-of-the-art transformer models to automatically generate high-quality documentation for functions, classes, and modules, while simultaneously analyzing the codebase to quantify quality and complexity. By providing a comprehensive suite of metrics and actionable insights, CodeWhisper empowers teams to maintain high standards of code health and documentation coverage, ensuring that projects remain maintainable and scalable.
+CodeWhisper is an intelligent development tool that automatically generates code documentation and quantifies code quality. It uses **CodeT5+** fine-tuned with **QLoRA** to generate docstrings, while providing complexity metrics, anomaly detection, and maintainability predictions through a comprehensive analytics pipeline.
+
+## Key Features
+- **Auto-Documentation**: Generates docstrings using a fine-tuned CodeT5 model (BLEU: 36.65, ROUGE-L: 62.17)
+- **Code Analysis**: Cyclomatic complexity, maintainability index, and anomaly detection (Isolation Forest)
+- **VS Code Extension**: Right-click context menu for real-time documentation generation
+- **Streamlit Dashboard**: Visualizes project health, complexity heatmaps, and flagged files
+
+## Technical Stack
+| Component | Technology |
+|-----------|------------|
+| Backend | Python, FastAPI |
+| ML/AI | CodeT5+, QLoRA, HuggingFace Transformers |
+| Analysis | Radon, Lizard, scikit-learn, XGBoost |
+| Dashboard | Streamlit, Plotly |
+| IDE Integration | VS Code Extension (TypeScript) |
 
 ## Target Audience
-This platform is built for software engineers, data scientists, and development teams who are committed to technical excellence. It is particularly valuable for organizations seeking to improve project onboarding, track technical debt, and ensure rigorous documentation standards. Whether for a single developer maintaining a complex library or a large team managing a sprawling microservices architecture, CodeWhisper provides the visibility and tools needed to keep codebases clean and well-documented.
+Software engineers, data scientists, and development teams seeking to improve documentation coverage, track technical debt, and maintain code health standards.
 
 ## Unique Value Proposition
-Unlike standard coding assistants like GitHub Copilot or Tabnine, which focus primarily on code completion and generation, CodeWhisper prioritizes the long-term health and understandability of the codebase. It distinguishes itself by combining deep code analytics—such as complexity and maintainability scores—with automated documentation generation. Furthermore, it offers a transparent, white-box approach with a dedicated dashboard for visualizing project health, identifying refactoring candidates, and tracking improvements over time, making it a holistic solution for code quality management.
+Unlike code completion tools (Copilot, Tabnine), CodeWhisper focuses on **long-term codebase health**. It combines deep analytics with automated documentation, offering a transparent dashboard for visualizing quality trends and identifying refactoring candidates.
