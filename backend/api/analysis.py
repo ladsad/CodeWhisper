@@ -52,11 +52,22 @@ class GenerateRequest(BaseModel):
 @router.post("/generate")
 async def generate_doc(request: GenerateRequest):
     """
-    Generate docstring for the provided code.
-    Currently a placeholder for the actual LLM inference.
+    Generate docstring for the provided code using the fine-tuned CodeT5 model.
     """
-    # Calculate complexity
+    from ml.inference import generate_docstring, is_model_available
     from core.analyzer import MetricsAnalyzer
+    
+    # Generate docstring using trained model
+    if is_model_available():
+        try:
+            generated_doc = generate_docstring(request.code, request.language)
+        except Exception as e:
+            print(f"Model inference error: {e}")
+            generated_doc = f"[Model error: {str(e)}]"
+    else:
+        generated_doc = "[Model not available - place trained model in backend/models/codet5-finetuned/]"
+    
+    # Also calculate complexity metrics
     analyzer = MetricsAnalyzer()
     metrics = analyzer.analyze_code(request.code, request.language)
     
@@ -69,7 +80,9 @@ async def generate_doc(request: GenerateRequest):
             avg_cc = sum(f['cyclomatic_complexity'] for f in funcs) / len(funcs)
             max_cc = max(f['cyclomatic_complexity'] for f in funcs)
         
-        complexity_info = f"\nComplexity Report:\n- Maintainability Index: {metrics.get('maintainability_index', 0):.2f}\n- Avg Cyclomatic Complexity: {avg_cc:.2f}\n- Max Cyclomatic Complexity: {max_cc}"
+        complexity_info = f"\n\nComplexity Report:\n- Maintainability Index: {metrics.get('maintainability_index', 0):.2f}\n- Avg Cyclomatic Complexity: {avg_cc:.2f}\n- Max Cyclomatic Complexity: {max_cc}"
 
-    docstring = f'"""\nAuto-generated documentation for {request.language} code.\n{complexity_info}\n"""'
+    # Combine model output with complexity info
+    docstring = f'"""\n{generated_doc}{complexity_info}\n"""'
     return {"docstring": docstring}
+
