@@ -38,3 +38,6 @@ backend/check_gpu.py
 # VS Code Extension Build Output
 vscode-extension/node_modules/
 vscode-extension/out/
+
+# Trained Models (too large for git)
+backend/models/
